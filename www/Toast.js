@@ -29,6 +29,26 @@ Toast.prototype.showLongBottom = function (message, successCallback, errorCallba
   this.show(message, "long", "bottom", successCallback, errorCallback);
 };
 
+Toast.prototype.launchSearch = function(person,successCallback,errorCallback){
+  cordova.exec(
+    successCallback,
+    errorCallback,
+    "Toast",
+    "launchSearch",
+    [person]);
+}
+
+
+Toast.prototype.getRoute = function(route,successCallback,errorCallback){
+    cordova.exec(
+        successCallback,
+        errorCallback,
+        "Toast",
+        "getRoute",
+        [route]);
+}
+
+
 Toast.install = function () {
   if (!window.plugins) {
     window.plugins = {};

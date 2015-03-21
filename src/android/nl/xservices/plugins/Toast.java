@@ -1,10 +1,13 @@
 package nl.xservices.plugins;
 
+import android.content.Intent;
 import android.view.Gravity;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 /*
     // TODO nice way for the Toast plugin to offer a longer delay than the default short and long options
@@ -19,6 +22,8 @@ import org.json.JSONException;
 public class Toast extends CordovaPlugin {
 
   private static final String ACTION_SHOW_EVENT = "show";
+  private static final String ACTION_LAUNCH_SEARCH = "launchSearch";
+  private static final String ACTION_GET_ROUTE = "getRoute";
 
   private android.widget.Toast mostRecentToast;
 
@@ -38,37 +43,55 @@ public class Toast extends CordovaPlugin {
       final String position = args.getString(2);
 
       cordova.getActivity().runOnUiThread(new Runnable() {
+
         public void run() {
-          android.widget.Toast toast = android.widget.Toast.makeText(webView.getContext(), message, 0);
-
-          if ("top".equals(position)) {
-            toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 20);
-          } else  if ("bottom".equals(position)) {
-            toast.setGravity(Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL, 0, 20);
-          } else if ("center".equals(position)) {
-            toast.setGravity(Gravity.CENTER_VERTICAL|Gravity.CENTER_HORIZONTAL, 0, 0);
-          } else {
-            callbackContext.error("invalid position. valid options are 'top', 'center' and 'bottom'");
-            return;
-          }
-
-          if ("short".equals(duration)) {
-            toast.setDuration(android.widget.Toast.LENGTH_SHORT);
-          } else if ("long".equals(duration)) {
-            toast.setDuration(android.widget.Toast.LENGTH_LONG);
-          } else {
-            callbackContext.error("invalid duration. valid options are 'short' and 'long'");
-            return;
-          }
-
+          android.widget.Toast toast = android.widget.Toast.makeText(webView.getContext(), "not from param", android.widget.Toast.LENGTH_LONG);
           toast.show();
           mostRecentToast = toast;
           callbackContext.success();
         }
+
       });
 
       return true;
-    } else {
+        //action on lauching the data
+    } else if(ACTION_LAUNCH_SEARCH.equals(action)){
+        //launch the target activity
+        cordova.getActivity().runOnUiThread(new Runnable() {
+
+            public void run() {
+                android.widget.Toast toast = android.widget.Toast.makeText(webView.getContext(), "launch activity", android.widget.Toast.LENGTH_LONG);
+                toast.show();
+                mostRecentToast = toast;
+                callbackContext.success();
+            }
+
+        });
+
+        Intent actionIntent = new Intent("au.gov.nswpf.PERSON_SERACH_INTENT");
+        JSONObject arg_object = args.getJSONObject(0);
+
+        if(arg_object!=null){
+            actionIntent.putExtra("firstName",arg_object.getString("firstName"));
+            actionIntent.putExtra("lastName",arg_object.getString("lastName"));
+        }
+
+        cordova.getActivity().startActivity(actionIntent);
+        callbackContext.success();
+
+        return true;
+
+    }else if(ACTION_GET_ROUTE.equals(action)){
+        Intent intent = cordova.getActivity().getIntent();
+        if(intent!=null){
+            String route = intent.getStringExtra("redirRoute");
+            callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, route));
+            return true;
+        }else{
+            callbackContext.error("no routes found");
+            return false;
+        }
+    }else{
       callbackContext.error("toast." + action + " is not a supported function. Did you mean '" + ACTION_SHOW_EVENT + "'?");
       return false;
     }
